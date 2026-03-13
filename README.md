@@ -57,6 +57,62 @@ Prefix the dataset repo with **eval\_** and supply `--policy.path` pointing to a
 
 ---
 
+## PhysAI Hackathon 2026 — Reproduction Notes
+
+This model was trained at the **Physical AI Hackathon (Feb 2026, SoloTech)** using an SO101 robot arm
+performing a water-pouring task.
+
+### Repos
+
+| Purpose | Repo |
+|---|---|
+| Model weights & artifacts (this repo) | `https://github.com/jjchong5/SoloHack` |
+| Training code (lerobot fork + SO101 camera fixes) | `https://github.com/jjchong5/lerobot-SO101-PhysAIHackathon-SoloTech` |
+| Training dataset (HuggingFace Hub) | `https://huggingface.co/datasets/SoloHack/pouring-merged` |
+
+### Setup from scratch
+
+```bash
+# 1. Clone the lerobot fork (includes Windows MSMF camera backend fixes for SO101)
+git clone https://github.com/jjchong5/lerobot-SO101-PhysAIHackathon-SoloTech
+cd lerobot-SO101-PhysAIHackathon-SoloTech
+
+# 2. Install (Ubuntu recommended; see requirements-ubuntu.txt for Windows notes)
+pip install -e .
+
+# 3. Re-train on the pouring dataset
+lerobot-train \
+  --dataset.repo_id=SoloHack/pouring-merged \
+  --policy.type=act \
+  --output_dir=outputs/train/act-pouring \
+  --job_name=act_pouring \
+  --policy.device=cuda \
+  --policy.repo_id=jjchong5/SoloHack \
+  --wandb.enable=true
+```
+
+### Run inference on SO101
+
+```bash
+lerobot-record \
+  --robot.type=so100_follower \
+  --dataset.repo_id=jjchong5/eval_pouring \
+  --policy.path=jjchong5/SoloHack \
+  --episodes=10
+```
+
+### Hardware used
+
+- SO101 robot arm (~$350 + printed parts + clamps + webcam, ~$450 total)
+- 2 cameras: one on claw, one on improvised tripod
+- Training data: ~25 teleoperated leader-follower episodes of water pouring
+- Model: ACT (Action Chunking with Transformers)
+
+> **Note:** The upstream lerobot library is at https://github.com/huggingface/lerobot —
+> no need to keep a local clone; install via `pip install lerobot` or clone fresh as needed.
+
+---
+
 ## Model Details
 
 - **License:** apache-2.0
